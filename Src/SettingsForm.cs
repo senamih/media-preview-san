@@ -21,7 +21,9 @@ public class SettingsForm : Form
     private readonly Button _cancelBtn = new();
     private readonly Label _statusLabel = new();
     private readonly Label _deviceCountLabel = new();
-    private readonly Label _versionLabel = new();
+    private readonly LinkLabel _versionLabel = new();
+
+    private const string RepositoryUrl = "https://github.com/senamih/media-preview-san";
     private readonly StatusOverlay _overlay = new();
 
     // 復元基準値（初回ロードは保存設定、再検出時は再検出前の UI 選択）
@@ -218,13 +220,17 @@ public class SettingsForm : Form
 
         int btnY = ClientSize.Height - 30 - 14;
 
-        // 画面下部の左側（ボタンと同じ高さ）にバージョン情報を表示
+        // 画面下部の左側（ボタンと同じ高さ）にバージョン情報を表示。
+        // クリックで GitHub リポジトリを既定ブラウザで開く。
         _versionLabel.AutoSize = true;
         _versionLabel.Text = $"MediaPreviewSan v{GetAppVersion()}";
         _versionLabel.Location = new Point(12, btnY + 8);
-        _versionLabel.ForeColor = Color.Gray;
         _versionLabel.TextAlign = ContentAlignment.MiddleLeft;
         _versionLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+        // 既定の見た目（下線つき青色）で常時表示する。
+        _versionLabel.LinkBehavior = LinkBehavior.AlwaysUnderline;
+        _versionLabel.LinkArea = new LinkArea(0, _versionLabel.Text.Length);
+        _versionLabel.LinkClicked += OnVersionLinkClicked;
 
         _okBtn.Text = "OK";
         _okBtn.DialogResult = DialogResult.OK;
@@ -569,6 +575,23 @@ public class SettingsForm : Form
             return plus >= 0 ? v[..plus] : v;
         }
         return asm.GetName().Version?.ToString() ?? "?";
+    }
+
+    /// <summary>バージョン表記クリックで GitHub リポジトリを既定ブラウザで開く。</summary>
+    private void OnVersionLinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(RepositoryUrl)
+            {
+                UseShellExecute = true,
+            });
+            _versionLabel.LinkVisited = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log($"リポジトリURLを開けませんでした: {ex.Message}");
+        }
     }
 
     private void OnOk(object? sender, EventArgs e)

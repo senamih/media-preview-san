@@ -8,6 +8,14 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-18
+
+正式初版リリース。`1.0.0-alpha.1` のテストを経て仕様を確定。
+
+### Changed
+
+- 設定ダイアログのバージョン表記をリンク化し、クリックで GitHub リポジトリを既定ブラウザで開くようにした。
+
 ## [1.0.0-alpha.1] - 2026-05-18
 
 > **テストリリース** — 動作確認・フィードバック収集を目的とした事前公開版です。
@@ -35,5 +43,6 @@
 - ウィンドウ位置・サイズの自動保存（500ms デバウンス）。
 - ライセンス・README・CHANGELOG を発行時に exe と同フォルダへ自動コピー。
 
-[Unreleased]: https://github.com/senamih/media-preview-san/compare/v1.0.0-alpha.1...HEAD
+[Unreleased]: https://github.com/senamih/media-preview-san/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/senamih/media-preview-san/compare/v1.0.0-alpha.1...v1.0.0
 [1.0.0-alpha.1]: https://github.com/senamih/media-preview-san/releases/tag/v1.0.0-alpha.1
