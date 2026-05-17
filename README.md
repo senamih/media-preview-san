@@ -72,7 +72,3 @@ MediaPreviewSan - <デバイス名> [1920x1080 @ 60fps] 59.9fps
 
 詳細は [`LICENSE`](LICENSE) を参照してください。
 同梱するサードパーティ コンポーネント（.NET / Vortice.Windows / DirectShowLib.Standard / OpenCvSharp / OpenCV）の表記は [`THIRD-PARTY-NOTICES.txt`](THIRD-PARTY-NOTICES.txt) を参照してください。
-
-## ソースからのビルド
-
-開発者向けのビルド・発行手順および開発環境構築（Alpine Linux 上での Windows 向けクロスコンパイル）は [`CLAUDE.md`](CLAUDE.md) を参照してください。

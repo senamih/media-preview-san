@@ -21,6 +21,7 @@ public class SettingsForm : Form
     private readonly Button _cancelBtn = new();
     private readonly Label _statusLabel = new();
     private readonly Label _deviceCountLabel = new();
+    private readonly Label _versionLabel = new();
     private readonly StatusOverlay _overlay = new();
 
     // 復元基準値（初回ロードは保存設定、再検出時は再検出前の UI 選択）
@@ -216,6 +217,15 @@ public class SettingsForm : Form
         _statusLabel.AutoEllipsis = true;
 
         int btnY = ClientSize.Height - 30 - 14;
+
+        // 画面下部の左側（ボタンと同じ高さ）にバージョン情報を表示
+        _versionLabel.AutoSize = true;
+        _versionLabel.Text = $"MediaPreviewSan v{GetAppVersion()}";
+        _versionLabel.Location = new Point(12, btnY + 8);
+        _versionLabel.ForeColor = Color.Gray;
+        _versionLabel.TextAlign = ContentAlignment.MiddleLeft;
+        _versionLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+
         _okBtn.Text = "OK";
         _okBtn.DialogResult = DialogResult.OK;
         _okBtn.Size = new Size(96, 30);
@@ -235,6 +245,7 @@ public class SettingsForm : Form
             lblScaling, _scalingCombo,
             _aspectCheck,
             _statusLabel,
+            _versionLabel,
             _okBtn, _cancelBtn,
         });
 
@@ -242,6 +253,9 @@ public class SettingsForm : Form
         _overlay.ForeColor = Color.Black;
         _overlay.Dock = DockStyle.Fill;
         Controls.Add(_overlay);
+
+        // Dock.Fill の _overlay より前面に出し、隠れないようにする
+        _versionLabel.BringToFront();
 
         AcceptButton = _okBtn;
         CancelButton = _cancelBtn;
@@ -540,6 +554,21 @@ public class SettingsForm : Form
         _formatCombo.Enabled = true;
         _scalingCombo.Enabled = true;
         _aspectCheck.Enabled = true;
+    }
+
+    /// <summary>csproj の InformationalVersion（無ければ FileVersion）を取得。+commit 等の付随情報は除去。</summary>
+    private static string GetAppVersion()
+    {
+        var asm = System.Reflection.Assembly.GetExecutingAssembly();
+        string? v = System.Reflection.CustomAttributeExtensions
+            .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(asm)?
+            .InformationalVersion;
+        if (!string.IsNullOrEmpty(v))
+        {
+            int plus = v.IndexOf('+');
+            return plus >= 0 ? v[..plus] : v;
+        }
+        return asm.GetName().Version?.ToString() ?? "?";
     }
 
     private void OnOk(object? sender, EventArgs e)

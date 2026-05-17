@@ -5,6 +5,8 @@
     `<改行>---<改行><改行>**指示**: <指示文言><改行><改行>**作業**: <作業まとめ><改行>`
   - ファイルの中身を確認しないこと。
   - ファイルが無い場合は作成すること。
+- 機能追加・変更・修正を行ったら、`CHANGELOG.md` の `[Unreleased]` セクションに Keep a Changelog 形式（Added / Changed / Fixed / Removed で分類）で追記すること。
+- ユーザーが「リリースして」「vX.Y.Z でリリース」等と指示したら、「リリース手順（バージョン管理）」の 5 ステップを実行すること。ただしタグ push と GitHub Release 公開は不可逆な外部公開のため、実行直前に必ずユーザーの最終確認を取ること。exe の動作確認は Windows 側でしか行えない点も明示すること。
 
 ---
 
@@ -68,6 +70,8 @@ WinForms / .NET 8 / Windows 10-11 x64。Alpine Linux 上でクロスコンパイ
 
 ### 主要ファイル
 
+ソース `.cs` は `Src/` 配下に配置（SDK スタイル csproj が `**/*.cs` を自動コンパイル。csproj/app.ico/ライセンス/ドキュメントはルート）。
+
 - `Program.cs` — エントリ。`MediaFoundationCaptureService.GlobalStartup/Shutdown`（MFStartup/MFShutdown を try/finally で確実に）。
 - `MainForm.cs` — メインウィンドウ。右クリックメニュー、信号待ち（`_signalTimer`）、タイトル更新（`_renderTimer` 1秒周期で実測 FPS 反映）、起動ダイアログ、`ShowExclusiveError`/`Reconnect`/`Disconnect`、ウィンドウ位置（実行モニタ中央／保存復元）、Save 500ms デバウンス。
 - `SettingsForm.cs` — 設定。`DeviceCache` 利用。`BusyDialog` 0.5s 遅延表示。再検出は `_restore*`（`_restoreFormat` は `CaptureFormat`）に退避→完全復元。タスク終了処理。`SuspendRedraw`/`ResumeRedraw` でちらつき抑制。
@@ -91,10 +95,21 @@ WinForms / .NET 8 / Windows 10-11 x64。Alpine Linux 上でクロスコンパイ
   DOTNET_ROOT=/opt/dotnet-ms PATH=/opt/dotnet-ms:$PATH dotnet publish -c Release -o Release
   ```
 - 主要 NuGet: `Vortice.MediaFoundation`/`Vortice.Direct3D11`/`Vortice.DXGI`/`Vortice.D3DCompiler`、`DirectShowLib.Standard`（**デバイス/解像度列挙のみ**）、`OpenCvSharp4.Windows`（DS-only 取得。ネイティブ同梱）。
-- 発行物は `Release/` に **`MediaPreviewSan.exe`（単一ファイル・約 110MB）+ `LICENSE` + `THIRD-PARTY-NOTICES.txt`**。csproj の `CopyLicenseFiles` ターゲット（AfterTargets=Publish）が後者2つを自動コピーする。
+- 発行物は `Release/` に **`MediaPreviewSan.exe`（単一ファイル・約 110MB）+ `LICENSE` + `THIRD-PARTY-NOTICES.txt` + `README.md` + `CHANGELOG.md`**。csproj の `CopyDistFiles` ターゲット（AfterTargets=Publish）が exe 以外の4ファイルを自動コピーする。
 - アイコン `app.ico`（マルチ解像度）は csproj の `<ApplicationIcon>` + `<EmbeddedResource>`。生成は ImageMagick の **`magick`**（`convert` は IM7 で非推奨）。**oklch は ImageMagick 非対応**なので sRGB 値を自前計算して渡す。
 - 実行・動作確認は Windows 側のみ。Windows 固有 API は Linux ビルドではエラーにならないが実行不可。ログは exe と同階層の `MediaPreviewSan.log`。
 - Vortice の正確な API シグネチャは `~/.nuget/packages/.../*.xml` か、別プロジェクトでリフレクション（`net8.0` 非 Windows でメタデータ読み）して確認すると速い。
+
+### リリース手順（バージョン管理）
+
+- バージョンは **SemVer**（`MAJOR.MINOR.PATCH`）。真実の源は csproj の `<Version>`/`<FileVersion>`/`<InformationalVersion>`（3 つを一致させる。exe のファイルプロパティに焼き込まれる）。
+- リリース時の順序:
+  1. `CHANGELOG.md` の `[Unreleased]` の内容を新バージョン見出しへ移し、日付（実日付）を入れる。末尾の compare/tag リンクも更新。
+  2. csproj の 3 バージョンを同じ番号へ更新。
+  3. クリーン発行（`rm -rf bin obj Release` → publish）。
+  4. `git tag -a vX.Y.Z -m "vX.Y.Z"` → `git push origin vX.Y.Z`。タグは `v` プレフィックス付き、csproj/CHANGELOG と完全一致させる。
+  5. GitHub Releases を作成し、`Release/` を zip 化（`MediaPreviewSan.exe` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` + `README.md` + `CHANGELOG.md`）して添付。リリースノートは CHANGELOG 該当版を転記。
+- `0.y.z` は仕様流動期。本アプリは仕様確定済みのため `1.0.0` を初版とする。互換を壊す変更（settings.json 形式の非互換化等）は MAJOR、後方互換の機能追加は MINOR、修正のみは PATCH。
 
 ---
 
