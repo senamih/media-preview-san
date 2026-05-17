@@ -123,3 +123,29 @@ WinForms / .NET 8 / Windows 10-11 x64。Alpine Linux 上でクロスコンパイ
 - 本体: `LICENSE`（MIT, `Copyright (c) 2026 senamih`）。
 - 依存: `THIRD-PARTY-NOTICES.txt`。MIT（.NET / Vortice / SharpGen）、Apache-2.0（OpenCvSharp / OpenCV）、**LGPL-2.1（DirectShowLib.Standard）**。
 - LGPL-2.1 は NuGet 動的参照＋ソース入手先明示で条件充足。配布時は exe と同フォルダに `LICENSE` と `THIRD-PARTY-NOTICES.txt` を必ず同梱（csproj が自動コピー）。これによりアプリ本体は MIT 等任意ライセンスで配布可能。
+
+---
+
+## 環境構築（Alpine で dotnet build を通すまで）
+
+- 背景：Alpine の apk パッケージ `dotnet8-sdk`（`/usr/lib/dotnet`、`/usr/bin/dotnet`）は **Linux 向けワークロードのみ**で `Microsoft.NET.Sdk.WindowsDesktop` を含まず、WinForms（`UseWindowsForms=true`）プロジェクトは `WindowsDesktop.targets が見つからない` で失敗する。
+- 解決策：**Microsoft 公式配布の .NET SDK（Alpine 用 `linux-musl-x64` ビルド）には WindowsDesktop SDK が含まれる**。これを apk 管理下と衝突しない `/opt/dotnet-ms` へ展開して使う。本環境では構築済み（SDK 8.0.420 / Host 8.0.26）。
+- 公式 SDK が musl 上で動くための実行時依存（apk）：`bash curl ca-certificates icu-libs libgcc libstdc++ libintl zlib`。
+  ```sh
+  apk add --no-cache bash curl ca-certificates icu-libs libgcc libstdc++ libintl zlib
+  ```
+- 公式 SDK を `/opt/dotnet-ms` へ導入する（再構築時の手順）：
+  ```sh
+  curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+  chmod +x /tmp/dotnet-install.sh
+  # Alpine は musl。dotnet-install.sh は RID を自動判定（linux-musl-x64）する
+  /tmp/dotnet-install.sh --channel 8.0 --quality ga --install-dir /opt/dotnet-ms
+  ```
+  - 固定バージョンで揃えたい場合は `--version 8.0.420`（`--channel 8.0` の代わり）。
+- 導入確認：
+  ```sh
+  DOTNET_ROOT=/opt/dotnet-ms PATH=/opt/dotnet-ms:$PATH dotnet --info        # RID: linux-musl-x64, SDK 8.0.x
+  ls /opt/dotnet-ms/sdk/*/Sdks/ | grep WindowsDesktop                       # Microsoft.NET.Sdk.WindowsDesktop が出れば OK
+  ```
+- win-x64 自己完結発行に要るランタイムパック（`Microsoft.NETCore.App.Runtime.win-x64` / `Microsoft.WindowsDesktop.App.Runtime.win-x64`）は `/opt/dotnet-ms/packs` には無く、初回 `restore`/`publish` 時に NuGet から取得され `~/.nuget` にキャッシュされる（オフライン環境では事前 restore が必要）。
+- システム既定の `dotnet`（apk 版）は触らない。ビルド／発行のたびに下記のとおり `DOTNET_ROOT` と `PATH` で公式 SDK を明示的に指す。
