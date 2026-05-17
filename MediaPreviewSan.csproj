@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>MediaPreviewSan</AssemblyName>
+    <RootNamespace>MediaPreviewSan</RootNamespace>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Vortice.MediaFoundation" Version="3.8.3" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.2.0" />
+    <PackageReference Include="Vortice.DXGI" Version="3.2.0" />
+    <PackageReference Include="Vortice.D3DCompiler" Version="3.2.0" />
+    <PackageReference Include="DirectShowLib.Standard" Version="2.1.0" />
+    <PackageReference Include="OpenCvSharp4.Windows" Version="4.13.0.20260302" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="app.ico" />
+  </ItemGroup>
+
+  <!-- 発行時に LICENSE / THIRD-PARTY-NOTICES を発行先へコピーする -->
+  <ItemGroup>
+    <LicenseFiles Include="$(MSBuildProjectDirectory)/LICENSE" />
+    <LicenseFiles Include="$(MSBuildProjectDirectory)/THIRD-PARTY-NOTICES.txt" />
+  </ItemGroup>
+
+  <Target Name="CopyLicenseFiles" AfterTargets="Publish">
+    <Copy SourceFiles="@(LicenseFiles)"
+          DestinationFolder="$(PublishDir)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('%(LicenseFiles.Identity)')" />
+  </Target>
+
+</Project>

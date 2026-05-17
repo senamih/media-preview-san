@@ -1,0 +1,24 @@
+# Build artifacts
+bin/
+obj/
+
+# Publish output (single-file exe ~110MB; regenerate via dotnet publish)
+Release/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+
+# Runtime-generated files
+settings.json
+MediaPreviewSan.log
+*.log
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# OS
+Thumbs.db
+.DS_Store
