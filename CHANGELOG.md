@@ -8,9 +8,16 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-29
+
 ### Added
 
 - README に免責事項（無保証・損害について一切責任を負わない旨）を追記。
+- ランタイム非同梱（framework-dependent）版 EXE `MediaPreviewSan-fd.exe` を発行物に追加。自己完結版（約 110MB）と並べて 2 種類を同梱。FD 版は約 95MB で、起動には [.NET 10 デスクトップランタイム](https://dotnet.microsoft.com/download/dotnet/10.0) が必要。README に 2 版の使い分け表を追記。
+
+### Changed
+
+- ターゲットフレームワークを .NET 8 から **.NET 10** へ移行（`net8.0-windows` → `net10.0-windows`）。.NET 10 の WinForms アナライザ（WFO1000）対応として、デザイナー非使用の実行時専用プロパティ `BusyDialog.MinimumStageMs` に `[DesignerSerializationVisibility(Hidden)]` を付与。機能・挙動の変更はなし。
 
 ## [1.0.0] - 2026-05-18
 
@@ -47,6 +54,7 @@
 - ウィンドウ位置・サイズの自動保存（500ms デバウンス）。
 - ライセンス・README・CHANGELOG を発行時に exe と同フォルダへ自動コピー。
 
-[Unreleased]: https://github.com/senamih/media-preview-san/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/senamih/media-preview-san/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/senamih/media-preview-san/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/senamih/media-preview-san/compare/v1.0.0-alpha.1...v1.0.0
 [1.0.0-alpha.1]: https://github.com/senamih/media-preview-san/releases/tag/v1.0.0-alpha.1

@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace MediaPreviewSan;
 
 internal sealed class BusyDialog : Form
@@ -7,6 +9,7 @@ internal sealed class BusyDialog : Form
     private DateTime _stageShownAt = DateTime.UtcNow;
 
     /// <summary>各ステータス（メッセージ）の最低表示時間。</summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public int MinimumStageMs { get; set; } = 1000;
 
     public BusyDialog(string message)

@@ -14,7 +14,7 @@
 # MediaPreviewSan
 
 キャプチャーボード・Web カメラ・仮想カメラ（OBS Virtual Camera 等）の出力を確認できる軽量プレビューツール。
-WinForms / .NET 8 / Windows 10-11 x64。Alpine Linux 上でクロスコンパイルし単一 exe で配布。
+WinForms / .NET 10 / Windows 10-11 x64。Alpine Linux 上でクロスコンパイルし単一 exe で配布。
 
 ---
 
@@ -89,14 +89,27 @@ WinForms / .NET 8 / Windows 10-11 x64。Alpine Linux 上でクロスコンパイ
 
 - **実装環境**: Alpine Linux（WSL2 可）。**ターゲット**: Windows 10/11 x64。
 - Alpine の `dotnet8-sdk` には WindowsDesktop SDK が無い。**Microsoft 公式 SDK が `/opt/dotnet-ms` に配置済み**。これを使う。csproj に `<EnableWindowsTargeting>true</EnableWindowsTargeting>` 必須。`<AllowUnsafeBlocks>true</AllowUnsafeBlocks>`（D3D11 テクスチャの unsafe コピー用）。
-- ビルド／発行は必ず DOTNET_ROOT を通す:
+- SDK は **.NET 10**（`/opt/dotnet-ms` に 10.0.x を配置済み。WindowsDesktop SDK 同梱）。csproj の TargetFramework は `net10.0-windows`。
+- ビルド／発行は必ず DOTNET_ROOT を通す。発行は **自己完結版 → FD（ランタイム非同梱）版の順**で行い、Release/ に 2 つの exe を並べる:
   ```sh
   DOTNET_ROOT=/opt/dotnet-ms PATH=/opt/dotnet-ms:$PATH dotnet build -c Release
-  rm -rf bin obj Release
+  rm -rf bin obj Release /tmp/pub-fd
+  # ① 自己完結（ランタイム同梱）版を Release へ（CopyDistFiles が付随4ファイルも配置）
   DOTNET_ROOT=/opt/dotnet-ms PATH=/opt/dotnet-ms:$PATH dotnet publish -c Release -o Release
+  # ② FD（ランタイム非同梱）版を一時ディレクトリへ
+  DOTNET_ROOT=/opt/dotnet-ms PATH=/opt/dotnet-ms:$PATH \
+    dotnet publish -c Release -o /tmp/pub-fd \
+    --self-contained false -p:SelfContained=false \
+    -p:EnableCompressionInSingleFile=false \
+    -p:AssemblyName=MediaPreviewSan-fd
+  # ③ FD の exe だけを Release へ追加
+  cp /tmp/pub-fd/MediaPreviewSan-fd.exe Release/ && rm -rf /tmp/pub-fd
   ```
+  - FD 版は `EnableCompressionInSingleFile=false` 必須（圧縮は自己完結時のみ。FD だと NETSDK1176）。`AssemblyName=MediaPreviewSan-fd` で `-fd.exe` を直接生成（ログは `MediaPreviewSan-fd.log` になる）。
+  - `dotnet publish -o` は出力先を毎回クリーンするので FD 版は一時ディレクトリへ発行し exe だけコピーする（同一 Release へ 2 回発行すると後勝ちで消える）。
+  - OpenCV ネイティブ同梱のため FD 版でも約 95MB（自己完結版 約 110MB との差は .NET ランタイム分の約 15MB のみ）。
 - 主要 NuGet: `Vortice.MediaFoundation`/`Vortice.Direct3D11`/`Vortice.DXGI`/`Vortice.D3DCompiler`、`DirectShowLib.Standard`（**デバイス/解像度列挙のみ**）、`OpenCvSharp4.Windows`（DS-only 取得。ネイティブ同梱）。
-- 発行物は `Release/` に **`MediaPreviewSan.exe`（単一ファイル・約 110MB）+ `LICENSE` + `THIRD-PARTY-NOTICES.txt` + `README.md` + `CHANGELOG.md`**。csproj の `CopyDistFiles` ターゲット（AfterTargets=Publish）が exe 以外の4ファイルを自動コピーする。
+- 発行物は `Release/` に **`MediaPreviewSan.exe`（自己完結・約 110MB）+ `MediaPreviewSan-fd.exe`（FD・約 95MB）+ `LICENSE` + `THIRD-PARTY-NOTICES.txt` + `README.md` + `CHANGELOG.md`**。csproj の `CopyDistFiles` ターゲット（AfterTargets=Publish）が exe 以外の4ファイルを自動コピーする（FD 版は一時発行→exe コピーなので付随ファイルはコピーされず、自己完結版発行時のものをそのまま使う）。
 - アイコン `app.ico`（マルチ解像度）は csproj の `<ApplicationIcon>` + `<EmbeddedResource>`。生成は ImageMagick の **`magick`**（`convert` は IM7 で非推奨）。**oklch は ImageMagick 非対応**なので sRGB 値を自前計算して渡す。
 - 実行・動作確認は Windows 側のみ。Windows 固有 API は Linux ビルドではエラーにならないが実行不可。ログは exe と同階層の `MediaPreviewSan.log`。
 - Vortice の正確な API シグネチャは `~/.nuget/packages/.../*.xml` か、別プロジェクトでリフレクション（`net8.0` 非 Windows でメタデータ読み）して確認すると速い。
@@ -109,7 +122,7 @@ WinForms / .NET 8 / Windows 10-11 x64。Alpine Linux 上でクロスコンパイ
   2. csproj の 3 バージョンを同じ番号へ更新。
   3. クリーン発行（`rm -rf bin obj Release` → publish）。
   4. `git tag -a vX.Y.Z -m "vX.Y.Z"` → `git push origin vX.Y.Z`。タグは `v` プレフィックス付き、csproj/CHANGELOG と完全一致させる。
-  5. GitHub Releases を作成し、`Release/` を zip 化（`MediaPreviewSan.exe` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` + `README.md` + `CHANGELOG.md`）して添付。リリースノートは CHANGELOG 該当版を転記。
+  5. GitHub Releases を作成し、`Release/` を zip 化（`MediaPreviewSan.exe` + `MediaPreviewSan-fd.exe` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` + `README.md` + `CHANGELOG.md`）して添付。リリースノートは CHANGELOG 該当版を転記。
 - `0.y.z` は仕様流動期。本アプリは仕様確定済みのため `1.0.0` を初版とする。互換を壊す変更（settings.json 形式の非互換化等）は MAJOR、後方互換の機能追加は MINOR、修正のみは PATCH。
 
 ---
